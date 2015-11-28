@@ -7,6 +7,12 @@ import pdb
 import random
 from beard_functions import *
 from msg_texts import *
+import bottools as btools
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',stream=sys.stdout, level=logging.INFO)
+logging.getLogger().addHandler(logging.StreamHandler())
+
 
 #class for dota event
 class dota:
@@ -35,6 +41,7 @@ class dota:
                     msgs['w'],
                     self.creator.first_name])
                 )
+        self.play_since_patch(self.creator)
    
         self.dtime = self.date_dota-self.date_create
 
@@ -50,10 +57,23 @@ class dota:
             self.minute = '30'
             self.date_dota = self.date_create.replace(hour=int(self.hour),minute=int(self.minute))
             
-            sendText(self.bot,
-                    self.message.chat_id,msgs['t_error'])
-
-
+            sendText(self.bot,self.message.chat_id,msgs['t_error'])
+    
+    def play_since_patch(self,player):
+        player_id = player.id
+        try:
+            cats = yaml.load(open('catabase/unpatched.yaml','rb'))
+        except:
+            return logging.error('no un patched players file')
+        
+        if btools.keySearch(cats,'telegram_id',player_id): 
+            i = next(index for (index, cat) in enumerate(cats) if cat["telegram_id"] == player_id)
+            logging.info('deleting cat from unpatched players',i,cats(i))
+            cats.pop(i)
+            yaml.dump(cats,open('catabase/unpatched.yaml','wb'))
+            return sendText(self.bot,self.message.chat_id,msgs['patch_warn'])
+        else:
+            return logging.info('player is patched')
 
     def shotgun(self,message,user_str=''):
         infoprint(self.bot,message,"shotgun request")
@@ -76,6 +96,7 @@ class dota:
                     ''.join([first_name,
                     ", you already shotgunned"])
                     )
+        self.play_since_patch(message.from_user)
         
     def unshotgun(self,message,case):
         
@@ -141,18 +162,21 @@ class dota:
 
     def time_info(self,message):
         infoprint(self.bot,message,"dota time info request")
-        self.dtime = self.date_dota-datetime.datetime.now()+datetime.timedelta(hours=1) #accounts for time zone difference. Remove when server is UK side.
+        self.dtime = self.date_dota-datetime.datetime.now()
+	#+datetime.timedelta(hours=1) accounts for time zone difference. Remove when server is UK side.
         dt_hours,dt_minutes,dt_seconds = get_dtime(self.dtime)
         dtime_str = ':'.join([dt_hours,dt_minutes,dt_seconds])
-        sendText(self.bot,message.chat_id,
-                "Dota will begin at "
-                +tformat(self.date_dota)
-                +", in "+dtime_str
-                +"\n*Shotguns:*\n"+', '.join(self.people))
+        
+        if (datetime.datetime.now()>self.date_dota):
+            when_str = 'Dota already began at '+tformat(self.date_dota)
+        else:
+            when_str = "Dota will begin at "+tformat(self.date_dota)+", in "+dtime_str
+
+        sendText(self.bot,message.chat_id,when_str+"\n*Shotguns:*\n"+', '.join(self.people))
 
     def tcheck(self,message):
         mins = 15
-        if self.date_dota - datetime.datetime.now() < datetime.timedelta(minutes=mins):
+        if self.date_dota - datetime.datetime.now() < datetime.timedelta(minutes=mins) and self.date_dota > datetime.datetime.now():
             sendText(self.bot,message.chat_id,'less than '+str(mins)+' minutes until dota! Get hype!')
             return True
         else: 
@@ -174,24 +198,25 @@ def tformat(date):
 
 #Find if the time was specified for an event and what it is
 def get_time(bot,message):
-    print message.text
+    logging.info('Getting dota time from message:',message.text)
     text = message.text
-    for ch in [':','.',';','-']:
+   
+   for ch in [':','.',';','-']:
         if  ch in message.text:
             print ch
             text = message.text.replace(ch,'')
 
-#    text = re.sub(':', '', message.text)
-#    text = re.sub('\.', '', message.text)
     match = re.search(r'at\s*(\w+)', text)
-    print "text",text
+    
     if match:
         print match.group(1)
         time = str(match.group(1))
     else:    
         sendText(bot,message.chat_id,msgs['notime'])
         time = "1930"
+    
     return time
+
 
 def get_str_list(bot,message,match):
     if match in message.text:
@@ -208,6 +233,7 @@ def get_dtime(dtime):
     minutes = (seconds % 3600) // 60
     seconds = seconds % 60
     return str(hours),str(minutes),str(seconds)
+
 
 #DEPRECATED
 #Find out what kind of event it is 

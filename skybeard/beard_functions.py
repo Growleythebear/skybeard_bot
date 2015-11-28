@@ -106,8 +106,12 @@ def feeding(bot,message,BASE_URL,update=False):
 
 #Wrapper for telegram.bot.sendMessage() function. Markdown enabled
 def sendText(bot,chat_id,text,webprevoff=False):
-    bot.sendMessage(chat_id=chat_id,text=text,parse_mode="Markdown",disable_web_page_preview=webprevoff)
-    #bot.sendMessage(chat_id=chat_id,text=text,disable_web_page_preview=webprevoff)
+    
+    #
+    try:
+        bot.sendMessage(chat_id=chat_id,text=text,parse_mode="Markdown",disable_web_page_preview=webprevoff)
+    except:
+        bot.sendMessage(chat_id=chat_id,text=text,disable_web_page_preview=webprevoff) 
 
 #Searches for commands sent to bot
 def command(cmd,text):
@@ -456,24 +460,23 @@ def dotaNews(bot,message):
         logging.error('No news items found in steam api request')
         return sendText(bot,message.chat_id,msgs['nonews'])
     
-    header = 'Latest Dota 2 news post ('+news['feedlabel']+')'
+    header = '*Latest Dota 2 news post* ('+news['feedlabel']+')'
     
     try:
-        return bot.sendMessage(chat_id=message.chat_id,text=newsReply(header,news),disable_web_page_preview=True)
+        return sendText(bot,message.chat_id,newsReply(header,news),True)
     except:
         logging.error('Couldn\'t parse: ',news)
  
 #format news message for bot message
 def newsReply(header,news):
-    title = news['title']
+    title = '\n*'+news['title']+'*'
     contents = news['contents']
     url = news['url']
     texts = [
             header,
             title,
-            '\n',
-            re.sub('[*]', '', contents),#* causes problems with message parsing with markdown enabled
-            '\n',
+            contents,
+            '\nSee the rest of this post here:',
             url]
     reply = '\n'.join(texts)
     print reply
@@ -490,7 +493,7 @@ def postUpdate(bot,message):
         header = '*NEW DOTA 2 PATCH!*'+date+''
         try:
             #using sendMessage as markdown can cause problems
-            bot.sendMessage(chat_id=message.chat_id,text=newsReply(header,patch),disable_web_page_preview=True)
+            sendText(bot,message.chat_id,newsReply(header,patch),True)
         except:
             logging.error('Couldn\'t parse: ',patch)
         #update list of potentially unpatched players from the catabase
