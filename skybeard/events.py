@@ -177,7 +177,7 @@ class dota:
     def tcheck(self,message):
         mins = 15
         if self.date_dota - datetime.datetime.now() < datetime.timedelta(minutes=mins) and self.date_dota > datetime.datetime.now():
-            sendText(self.bot,message.chat_id,'less than '+str(mins)+' minutes until dota! Get hype!')
+            sendText(self.bot,message.chat_id,'Dota will begin in a few minutes. Get hype!')
             return True
         else: 
             return False
@@ -201,7 +201,7 @@ def get_time(bot,message):
     logging.info('Getting dota time from message:',message.text)
     text = message.text
    
-   for ch in [':','.',';','-']:
+    for ch in [':','.',';','-']:
         if  ch in message.text:
             print ch
             text = message.text.replace(ch,'')
