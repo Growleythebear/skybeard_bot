@@ -3,41 +3,50 @@ def help():
 
     msg = '''
 
-    With the powers invested in me by Lord Gaben, I respond to the following commands and actions:
-    
-    *Commands:*
-    *THE DATABASE*
-    */register* -  This will register you, linking your telegram and dota accounts. This allows you to use the features that involve polling the Dota 2 API and is used as shown:
-        "*/register <dota first name>, <dota last name>, <dotabuff player page>*"
-    */catabase* - Displays the current spacecat entries in the database (catabase)
-    */delete cat <index>* - Deletes the catabase entry for the given index. The index is the first element of the database entries returned with /catabase
-    
-    *DOTA EVENTS*
-    */dota* - creates a new dota event and precedes the specifed time after "at". E.g:
-        "*/dota at 18:45*"
-        "*/dota at 18.45*"
-        "*/dota at 1845*"
-        "*/dota at 18:45 with alice, bob*"
-        "*/dota*"
-        Not specifying the time will create dota event with default time (19:30).
-        If a dota event already exists, the time will just be modified.
-        When creating an event you can include people you know want to play to auto shotgun them
-    */delete dota* - will remove the current dota event
-    *shotgun!* - Skybeard will know you wish to participate in the feeding
-    *unshotgun!* - Remove yourself from the shotgun (and rdry) list.
-    *rdry!* - Skybeard will know you are ready to feed imminently
-    *unrdry!* - Remove yourself from the rdrys
+With the powers invested in me by Lord Gaben, I respond to the following commands and actions:
 
-    *DOTA 2 API REQUESTS*
-    */topfeeds* - Poll the Dota 2 API for everyone's last 25 matches, giving rankings by total deaths.
-    Giving the option "update" will update the data from the steam servers. This will occur automatically if no local cache is found.
-    */lastmatch* - Poll the Dota 2 API for your last played match and link the DotaBuff page
-    
-    *MISC*:
-        I can be asked if there is a five stack in multiple ways, as well as if/when Dota is happening
-    '''
+*Commands:*
+
+*THE DATABASE*
+*/register <dota first name>, <dota last name>, <dotabuff player page>*"
+*/catabase* - Displays the current spacecat entries in the database (catabase)
+*/delete cat <index>* - Deletes the catabase entry for the given index.
+
+*DOTA EVENTS*
+*/dota* - creates a new dota event or modifies an existing event's time:
+    "*/dota at 18:45*"
+    "*/dota at 18.45*"
+    "*/dota at 1845*"
+    "*/dota at 18:45 with alice, bob*" (will shotgun alice and bob)
+    "*/dota*"
+
+*/delete dota* - will remove the current dota event
+*shotgun!* - shotgun for dota
+*unshotgun!* - Remove yourself from the shotgun (and rdry) list.
+*rdry!* - rdry up
+*unrdry!* - Remove yourself from the rdrys
+
+*DOTA 2/STEAM API REQUESTS*
+*/topfeeds* - See who died the most recently. Add the 'update' argument to refresh the list
+*/lastmatch* - Post your last match details
+*/news* - latest dota 2 news post
+
+If a message is asking if or when dota is happening, or if there is a 5 stack, Skybeard will answer
+
+*MISC*:
+*/weather <city>* - Will give the forecase for a given city. No argument defaults to Birmingham
+*/movie <movie title>* - See summary info for a specific movie
+
+        '''
     return msg
 
+def readme():
+    msg = '''
+
+For a more comprehensive guide on how to use Skybeard, please see the readme section 'How to use':
+https://github.com/LanceMaverick/skybeard_bot/blob/master/README.md#how-to-use
+        '''
+    return msg
 
 # dict of strings for bot messages. Nice than concatenation in functions but still could be better
 msgs ={ 
@@ -52,6 +61,8 @@ msgs ={
         'getfeed':      '*RETRIEVING FEEDING DATA*\nOne moment please.',
         'serverpoll':   'Contacting Steam servers. This may take a while...\n',
         'feedtable':    '*TOP FEEDERS OF THE WEEK* (25 Matches)\n\nRANK....NAME....DEATHS\n',
+        #steam api requests
+        'nonews':       'Sorry, I couldn\'t find any data',
         
         #dota event messages
         'w'     :       'with',
@@ -61,6 +72,7 @@ msgs ={
         'makedota':     'Dota event created for',
         'shotgun':      'you have shotgunned for Dota at',
         'overstack':    'Oh dear, too many people have shotgunned. It must be resolved with a fight to the death. \nShotguns are: \n',
+        'patch_warn':    'You don\'t appear to have played dota since the last patch. Be aware that you may have to update!',
         
         #misc
         'nomovie':      'I couldn\'t find the film you were looking for, maybe IMDb can:'
