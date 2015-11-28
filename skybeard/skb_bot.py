@@ -10,6 +10,7 @@ from dota2py import api
 import sys
 from os.path import abspath, join, dirname
 import os
+import datetime
 from datetime import date, timedelta
 import msg_texts
 import register as reg
@@ -19,10 +20,10 @@ sys.path.append(abspath(join(abspath(dirname(__file__)), "..")))
 
 app_key = os.environ.get('DB_APP_KEY')
 app_secret = os.environ.get('DB_APP_SEC')
-key = os.environ.get('DOTA2_API_KEY')
-if not key:
+steam_key = os.environ.get('DOTA2_API_KEY')
+if not steam_key:
     raise NameError('Please set the DOTA2_API_KEY environment variable')
-api.set_api_key(key)
+api.set_api_key(steam_key)
 token = os.environ.get('TG_BOT_TOKEN')
 BASE_URL = 'https://api.telegram.org/bot%s' % token
 LAST_UPDATE_ID = None
@@ -34,10 +35,9 @@ except ImportError:
 def main():
     update_id = None
     global BASE_URL
-    logging.basicConfig(filename='botlog.log',
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',file='botlog.log')
 
-    logging.getLogger().addHandler(logging.StreamHandler())
+#    logging.getLogger().addHandler(logging.StreamHandler())
 
     bot = telegram.Bot(token=os.environ.get('TG_BOT_TOKEN'))
 
@@ -55,13 +55,13 @@ def main():
     thanks = ['thanks','cheers','nice one']
     gainz_words = ['gainz']
     dota_checked = False
+    patch_check_time = datetime.datetime.now()
     #long polling skybeard bot
     while True:
 
-        #Does a dota event exist?
-        #Get updates from bot. 10s timeout on poll, update on new message
         try:
            
+            #Does a dota event exist?
             try:
                 dotes
             except NameError:
@@ -69,31 +69,63 @@ def main():
             else:
                 dota_exists = True
                 
+            
+            #Get updates from bot. 10s timeout on poll, update on new message
             for update in bot.getUpdates(offset=update_id, timeout=10):
                 chat_id = update.message.chat_id
                 message = update.message
                 text = update.message.text.encode('utf-8')
                 user = update.message.from_user
-              
+           
+                ############## TIME CHECKS ##############
+                #########################################           
 
+                #checks for new dota patches hourly
+                if bf.expiry(patch_check_time,1):
+                    bf.postUpdate(bot,message)
 
+                #deletes a dota event if it is 6 hours passed the event start time 
+                if dota_exists and bf.expiry(dotes.date_dota,6):
+                    logging.info('dota event expired',dotes.date_dota)
+                    del dotes
+                    dota_exists = False
+                
+                #checks if it's almost time for dota
                 if (dota_exists and not dota_checked):
                     dota_t_check = dotes.tcheck(message)
                     logging.info("checked",update_id)
                     if (dota_t_check):
                         dota_checked = True
 
-                ############ MESSAGE HANDLING ############
-                ##########################################           
-
-
-
+                
+                ####test commands####
                 #location testing
                 if (message.location):
                     bf.locCheck(bot,message)
+                
                 #test photo sending is working
                 if bf.command('/phototest',text):
                     bf.postImage(text.split('/phototest ',1)[1],chat_id,BASE_URL) 
+               
+                #print catabase 
+                if bf.command('/catdump',text):
+                    reg.dumpCats(bot,message)
+                
+                ############ MESSAGE HANDLING ############
+                ##########################################           
+                
+                #latest steam news post for game. Currently just Dota
+                if(bf.command('/news',text)):
+                    try:
+                        title = text.split('/news ',1)[1]
+                    except:
+                        title = 'dota'
+                    
+                    if title == 'dota':    
+                        bf.dotaNews(bot,message)
+                    else:
+                        bf.sendText(bot,chat_id,title+' is not a recognised steam game')
+                
                
                 #post space cat pics
                 if bf.command('give me spacecats',text) or bf.command('show me spacecats',text):
@@ -103,11 +135,11 @@ def main():
                 if bf.command('/help',text):
                     bf.sendText(bot,chat_id,msg_texts.help())
                 
+                #weather forecast
                 if bf.command('/weather',text):  #does not work in python2.6
-                    imgPath = bf.forecast(bot,message)
-                    bf.postImage(imgPath,chat_id,BASE_URL) 
+                    bf.forecast(bot,message,BASE_URL)
 
-
+                #movie lookup
                 if bf.command('/movie',text):
                     try:
                         title = text.split('/movie ',1)[1]
@@ -115,19 +147,20 @@ def main():
                         bf.sendText(bot,chat_id,'Please specify a film title')
                     else:
                         bf.movies(bot,message,title)
-                    
+                
+                #register on the catabase
                 if bf.command('/register',text):
                     reg.regCats(bot,message)
                 
+                #display database entries which user has permission to see
                 if bf.command('/catabase',text):
                     reg.printCats(bot,message)
-
-                if bf.command('/catdump',text):
-                    reg.dumpCats(bot,message)
-                
+                    
+                #delete catabase entry
                 if bf.command('/delete cat',text):
                     reg.deleteCat(bot,message)
                 
+                #banter command
                 if bf.command('/echo',text):
                     bf.echocats(bot,message)
 
@@ -137,7 +170,7 @@ def main():
                         update_feeds = True
                     else:
                         update_feeds = False
-                    imgPath = bf.feeding(bot,message,update_feeds)
+                    bf.feeding(bot,message,BASE_URL,update_feeds)
                     bf.postImage(imgPath,chat_id,BASE_URL) 
                 
                 #post last dota match details of user  
