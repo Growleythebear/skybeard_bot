@@ -134,6 +134,7 @@ def main():
                 #send help text
                 if bf.command('/help',text):
                     bf.sendText(bot,chat_id,msg_texts.help())
+                    bf.sendText(bot,chat_id,msg_texts.readme())
                 
                 #weather forecast
                 if bf.command('/weather',text):  #does not work in python2.6
