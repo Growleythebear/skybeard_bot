@@ -1,44 +1,15 @@
-#from lxml import etree
-#import sys
-#def load_map():
-#    try:
-#        register = etree(file="spc.xml")
-#    except:
-#        register = etree.Element("spcat")
-#
-##    elem = register.getroot()
-##    elem.write(sys.stdout)
-##    file = open('spc.xml', "r")
-##    tree = parse(file)
-##    elem = tree.getroot()
-##    root = et.Element("root")
-##    root.append(et.Element("one"))
-##    root.append(et.Element("two"))
-##    root.append(et.Element("three"))
-##    print root
-##    register.write(sys.stdout)
-##    print " "
-#
-#    root = etree.Element("root")
-#    etree.SubElement( root,"child1" )
-#    etree.SubElement( root,"child2" )
-#    etree.SubElement( root,"child3" )
-#    print root
-#    etree.SubElement(root[0][0]).set('name','cat')
-#    et = etree.ElementTree(root)
-#    et.write(sys.stdout)
-#load_map()
-#
 import telegram
+import yaml
 import pickle
 import shutil
 import beard_functions as bf
 from msg_texts import * 
+import logging
 
 def getCats():
     
     try:
-        spacecats = pickle.load(open('catabase/catabase.p','rb'))
+        spacecats = yaml.load(open('catabase/catabase.yaml','rb'))
     except:
         spacecats = []
 
@@ -79,26 +50,20 @@ def regCats(bot,message):
                 'last_name':    tg_sname,
                 'telegram_id':  tg_id
                 }
-        print cat_dict
+        logging.info(cat_dict)
         
         spacecats.append(cat_dict)
         saveCats(spacecats)
         return bf.sendText(bot,message.chat_id,'New Spacecat added to the space catabase!')
 
 def saveCats(cats):
-#    try:
-#        shutil.copy('catabase/catabase.p','catabase/backups/catabase_autobackup.p')
-#    except:
-#        print 'catabase not found'
-#    
-    pickle.dump(cats,open('catabase/catabase.p','wb'))
+    yaml.dump(cats,open('catabase/catabase.yaml','wb'))
 
 def deleteCat(bot,message):
     cats = getCats()
     
     try:
         index = int(message.text.split('cat',1)[1].strip())
-        print index,type(index)
     except:
         return bf.sendText(bot,message.chat_id,'Couldn\'t parse index')
     
@@ -143,7 +108,8 @@ def is_user_admin(message):
 
 def printCats(bot,message):
     cats = getCats()
-    print cats
+
+    logging.info(cats)
     
     db_size = len(cats)
     bf.sendText(bot,message.chat_id,'There are '+str(db_size)+' catabase entries:')
@@ -161,5 +127,5 @@ def dumpCats(bot,message):
     cats = getCats()
     for cat in cats:
         bf.sendText(bot,message,str(cat))
-        print cat
+        logging.info(cat)
 
