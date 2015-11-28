@@ -102,8 +102,7 @@ def feeding(bot,message,BASE_URL,update=False):
     plt.setp(xtickNames, rotation=90, fontsize=6)
     imgPath = 'img/feed.png'
     plt.savefig(imgPath,facecolor='#bcc5d4')
-    
-    return imgPath 
+    postImage(imgPath,message.chat_id,BASE_URL) 
 
 #Wrapper for telegram.bot.sendMessage() function. Markdown enabled
 def sendText(bot,chat_id,text,webprevoff=False):

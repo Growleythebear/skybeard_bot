@@ -171,7 +171,6 @@ def main():
                     else:
                         update_feeds = False
                     bf.feeding(bot,message,BASE_URL,update_feeds)
-                    bf.postImage(imgPath,chat_id,BASE_URL) 
                 
                 #post last dota match details of user  
                 if bf.command('/lastmatch',text):
