@@ -60,6 +60,14 @@ Users can only delete their own entries, unless they are a catabase admin. Admin
 
 ### Creating Dota 2 events
 
+To create a Dota 2 event use the `\dota` command. Without arguments, this will create the event at the default time of 19:30 that evening. Times can be speficied in several formats, e.g `at 10:00`, `at 10.00`, `at 1000`.
+If you also use the keyword `with` then Skybeard will attempt to shotgun the people you list afterwards. For instance,
+```\dota at 18:00 with Alice, Bob```
+will create an event at 6pm with Alice and Bob shotgunned. All names should be comma separated.
+
+
+
+
 
     
   
