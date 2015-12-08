@@ -75,5 +75,8 @@ msgs ={
         'patch_warn':    'You don\'t appear to have played dota since the last patch. Be aware that you may have to update!',
         
         #misc
-        'nomovie':      'I couldn\'t find the film you were looking for, maybe IMDb can:'
+        'nomovie':      'I couldn\'t find the film you were looking for, maybe IMDb can:',
+        'nogainz':      'I have not seen you go to the gym this week. You do not deserve to see proper gainz.',
+        'tag_saved':    ', you have tagged this message to be of interest to another spacecat. I will resend your message to them the next time they are active in this chat. (Please note, the name I see may be different from the name you have them saved under in your contacts.)',
+        'tag_reply':    ', someone wanted you to see the following message:'
         }

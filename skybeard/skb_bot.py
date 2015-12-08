@@ -5,6 +5,7 @@ import logging
 import random
 import beard_functions as bf
 import dota_functions as df
+import bottools as btools
 import pdb
 from dota2py import api
 import sys
@@ -56,6 +57,8 @@ def main():
     gainz_words = ['gainz']
     dota_checked = False
     patch_check_time = datetime.datetime.now()
+    tags = []
+    
     #long polling skybeard bot
     while True:
 
@@ -110,7 +113,10 @@ def main():
                 #print catabase 
                 if bf.command('/catdump',text):
                     reg.dumpCats(bot,message)
-                
+               
+                if bf.command('/updategains',text):
+                    bf.updateGainz(message)
+
                 ############ MESSAGE HANDLING ############
                 ##########################################           
                 
@@ -232,7 +238,7 @@ def main():
                 
                 #post motivational lifting pics
                 if bf.keywords(gainz_words,text.lower()):
-                    bf.gainz(bot,chat_id,message)
+                    bf.gainz(bot,message)
                 
                 #reply to thank you messages
                 if bf.keywords(thanks,text.lower()) and  ('skybeard' in text.lower()):
@@ -260,6 +266,18 @@ def main():
                     else:
                         events.nodota(bot,message)
                 update_id= update.update_id + 1
+                
+
+                pending_tag = btools.keySearch(tags,'name',user.first_name.lower())
+                if pending_tag and pending_tag['chat_id']==chat_id:
+                    bf.tagReply(bot,message,pending_tag)
+                    i = next(index for (index, entry) in enumerate(tags) if entry['name'] == pending_tag['name'])
+                    tags.pop(i)
+                
+                tag_match = re.search(r'\/tag\s*(\w+)',text)
+                if tag_match:
+                    tags.append(bf.msgTag(bot,message,tag_match.group(1)))
+                    print tags
 
         except telegram.TelegramError as e:
             if e.message in ("Bad Gateway", "Timed out"):

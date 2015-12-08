@@ -5,6 +5,7 @@ import telegram
 import re
 import random
 import dota_functions as df
+import bottools as btools
 from msg_texts import * #imports 'msgs' dictionary
 import pdb
 import numpy as np
@@ -18,6 +19,7 @@ import omdb
 import logging
 import math
 import datetime
+import time
 import sys
 import os
 
@@ -134,20 +136,73 @@ def infoprint(bot,message,text):
     logging.info("USER MESSAGE:")
     logging.info(message.text)
 
-#Show chat members why they should go lift
-def gainz(bot,chat_id,message):
+def updateGainz(message):
+    user = message.from_user
+    user_id = user.id
+    name = user.first_name
+
+    try:
+        gainz_history = yaml.load(open('catabase/gym_history.yaml','rb'))
+    except:
+        logging.warning('no gainz_history.yaml found. Creating new file')
+        gainz_history = []
     
+    now = datetime.datetime.now()
+    user_new ={'user_id': user_id, 'time': now, 'name': name }
+    match = btools.keySearch(gainz_history,'user_id',user_id)
+    if match:
+        for entry in gainz_history:
+            if entry['user_id'] ==user_id:
+                entry.update(user_new)
+    else:
+        gainz_history.append(user_new)
+    yaml.dump(gainz_history,open('catabase/gym_history.yaml','wb'))
+    yaml.dump(gainz_history,sys.stdout)
+
+def checkGainz(message):
+
+    #if there is no gym history, just post gainz photos anyway
+    try:
+        gainz_history = yaml.load(open('catabase/gym_history.yaml','rb'))
+    except:
+        logging.warning('no gainz_history.yaml found. Returning true for gainzCheck())')
+        return True
+    
+    user_id = message.from_user.id
+    entry = btools.keySearch(gainz_history,'user_id',user_id)
+    
+    #check if it has been more than one week (168 hours) since last gym check-in
+    if entry and not expiry(entry['time'],168):
+        return True
+    else:
+        return False
+
+
+#Show chat members why they should go lift
+def gainz(bot,message):
     gain_photos= [
             'http://i.imgur.com/QrdcYCP.jpg',
             'http://i.imgur.com/zopXdvc.jpg',
             'http://i.imgur.com/jEi18ha.jpg'
             ]
-    i = random.randint(0, len(gain_photos)-1)
-    try:
-        bot.sendPhoto(chat_id=chat_id, photo=gain_photos[i])
-    except:
-        logging.error('unable to parse photo:',cat_photos[i],sys.exc_info()[0])
-
+    
+    chat_id = message.chat_id 
+    user_id = message.from_user.id
+    user_name = message.from_user.first_name
+    random.seed()
+    
+    if (checkGainz(message)):
+        i = random.randint(0, len(gain_photos)-1)
+        try:
+            bot.sendPhoto(chat_id=chat_id, photo=gain_photos[i])
+        except:
+            logging.error('PHOTO PARSE ERROR:',gain_photos[i],sys.exc_info()[0])
+    else:
+        try:
+            bot.sendPhoto(chat_id=chat_id, photo='http://i.imgur.com/Rra4uun.png') #send blobby gains
+        except:
+            logging.error('PHOTO PARSE ERROR:',bad_gainz[j],sys.exc_info()[0])
+        sendText(bot,message.chat_id,', '.join([user_name, msgs['nogainz']]))
 
 #Post cats in space
 def postCats(bot,message):
@@ -505,4 +560,30 @@ def expiry(initial_time,dtime): #dtime in hours
     if datetime.datetime.now() > initial_time+datetime.timedelta(hours=dtime):
         return True
 
+def msgTag(bot, message, name):
+    user_name = message.from_user.first_name
+    tagged_msg = {
+            'time':         datetime.datetime.now(),
+            'chat_id':      message.chat_id,
+            'name':         name.lower(),
+            'sender':       user_name,
+            'sender_id':    message.from_user.id,
+            'text':         message.text
+            }
+    sendText(bot,message.chat_id,user_name+msgs['tag_saved']) 
+    return tagged_msg
+
+#    try:
+#        tags_list = yaml.load(open('catabase/tags.yaml','rb'))
+#    except:
+#        logging.warning('no tags.yaml found, creating new file')
+#        tags_list = []
+#
+#    tags_list.append(tagged_msg)
+
+def tagReply(bot,message,tag):
+    user_name = message.from_user.first_name
+    sendText(bot,message.chat_id,user_name+msgs['tag_reply'])
+    sendText(bot,message.chat_id,'from: '+tag['sender']+' at '+tag['time'].strftime('%m-%d %H:%M')+'\n\n'+tag['text'])
+    
 
